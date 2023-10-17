@@ -198,6 +198,7 @@ def main():
                 chart_interval = st.selectbox("Select an Interval",["Default","1","5","60","120","D","W"])
                 if chart_interval =="Default" :
                    df_bybit = get_bybit_data(symbol)
+                   st.write(df_bybit)
                 else:
                    df_bybit = get_bybit_data(symbol,chart_interval)
                 df_bybit['timestamp'] = pd.to_datetime(df_bybit['timestamp'], unit='ms')  
