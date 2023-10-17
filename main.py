@@ -171,6 +171,7 @@ def main():
         match selected_sub_tab:
             case "Beta Calculator":
                 st.title("Beta Calculator")
+                st.markdown('This pulls data from yahoo finance so please enter the tickers exactly how they appear there')
                 # Input for ticker_1 which can be single or multiple assets
                 ticker_1 = st.text_input("Enter the asset(s) (comma-separated for multiple assets):").split(',')
                 # Input for ticker_2 (the benchmark)
