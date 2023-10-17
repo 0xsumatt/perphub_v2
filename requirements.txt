@@ -1,10 +1,10 @@
 altair==4.2.0
-anchorpy==0.18.0
+anchorpy
 driftpy
 httpx==0.23.0
 pandas==1.5.3
 pandas_datareader==0.10.0
-solana==0.30.2
+solana
 streamlit==1.26.0
 streamlit_autorefresh==1.0.1
 yfinance==0.2.28
