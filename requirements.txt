@@ -1,5 +1,5 @@
 altair==4.2.0
-anchorpy 0.10.0
+anchorpy==0.10.0
 driftpy
 httpx==0.23.0
 pandas==1.5.3
