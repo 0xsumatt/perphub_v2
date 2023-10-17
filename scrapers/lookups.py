@@ -38,7 +38,9 @@ def get_bybit_data(symbol:str,interval = None):
         else:
             url = f'https://api.bybit.com/v5/market/kline?category=linear&symbol={symbol}USDT&interval=240&start={current_time-(60 * 60 * 24 * 365)}&end={current_time}&limit=1000'
         
-        get_klines = httpx.get(url).json()['result']['list']
+        get_klines = httpx.get(url).json()
+        st.write(get_klines)
+        get_klines = get_klines['result']['list']
         timestamps = [entry[0] for entry in get_klines]
         closing_prices = [entry[4] for entry in get_klines]
         opening_prices = [entry[1] for entry in get_klines]
