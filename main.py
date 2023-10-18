@@ -43,7 +43,7 @@ def main():
      case "Home":
         st.write("")
         refresh = st_autorefresh(300000)
-        st.markdown("News refreshes every 5 minutes and uses News of Alpha feed, as a result i've used Tree of Alpha's ref links for both by binance and Bybit")
+        st.markdown("News refreshes every 5 minutes and uses News of Alpha feed")
         st.write(fetch_news())
    
         protocols = ['Drift','Vertex-Protocol','Hyperliquid','Zeta','Mango-Markets-V4']
@@ -93,7 +93,7 @@ def main():
 
      case "Solana":
         st.write("")
-        st.markdown("TVL data is currently provided by DefiLlama (ignores LST's) & DAU data provided by VybeNetwork")
+        st.markdown("TVL data is currently provided by DefiLlama and DAU data provided by VybeNetwork")
         sub_tabs = ["All","Zeta"]
         current_sub_tab = query_params.get('sub_tab', ['All'])[0]
         selected_sub_tab = st.radio("Choose:", sub_tabs, index=sub_tabs.index(current_sub_tab))
