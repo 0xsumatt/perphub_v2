@@ -165,7 +165,7 @@ def main():
           c2.altair_chart(dau_chart,use_container_width=True)
          
      case "Tools":
-        sub_tabs = ["Beta Calculator","Historic Trading Lookups","Position Lookups","Backtester","Orderbook Snapshots","Consolidated Orderbook Density"]
+        sub_tabs = ["Beta Calculator","Position Lookups","Backtester","Orderbook Snapshots","Consolidated Orderbook Density"]
         current_sub_tab = query_params.get('sub_tab',['Beta Calculator'])[0]
         selected_sub_tab = st.radio("Choose:", sub_tabs, index=sub_tabs.index(current_sub_tab))
         match selected_sub_tab:
@@ -192,13 +192,13 @@ def main():
 
 
             case "Historic Trading Lookups":
-                st.warning("Drift only works with SOl perp")
+                st.warning("currently not working")
                 exchange = st.selectbox("Select an Exchange",['Drift',"Hyperliquid","Zeta"])
                 symbol = st.selectbox("Select a symbol:", ["BTC", "ETH", "SOL", "ARB","SUI"]) 
                 chart_interval = st.selectbox("Select an Interval",["Default","1","5","60","120","D","W"])
                 if chart_interval =="Default" :
                    df_bybit = get_bybit_data(symbol)
-                   st.write(df_bybit)
+                   
                 else:
                    df_bybit = get_bybit_data(symbol,chart_interval)
                 df_bybit['timestamp'] = pd.to_datetime(df_bybit['timestamp'], unit='ms')  

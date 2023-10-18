@@ -53,6 +53,37 @@ def get_bybit_data(symbol:str,interval = None):
         })
         return df
 
+def get_hyperliquid_klines(symbol,interval=None):
+    current_time = (time.time())
+    if interval is not None:
+        json_data = {
+             "type": "candleSnapshot",
+            "req": {
+                "coin": symbol,
+                "interval": interval,
+                "startTime": (current_time-(60 * 60 * 24 * 365)),
+                "endTime": current_time,
+                }
+        }
+    else:
+        json_data = {
+             "type": "candleSnapshot",
+             "req": {
+                "coin": symbol,
+                "interval": "1h",
+                "startTime": 1697536508000,
+                "endTime":int(current_time*1000)
+                }
+        }
+
+    
+    data = httpx.post(hl_url,headers = hl_headers, json=json_data).json()
+    print(data)
+    
+         
+         
+     
+
 
 def fetch_hl_positions(lookup):
     
