@@ -17,7 +17,7 @@ from solana.publickey import PublicKey
 import pandas as pd
 from anchorpy import Program
 from driftpy.accounts import get_user_account_public_key
-
+current_time = (time.time())
 
 hl_url ="https://api.hyperliquid.xyz/info"
 hl_headers = {"Content-Type": "application/json"}
@@ -33,7 +33,7 @@ def zeta_trade_history(address:str,market = None):
 
 def get_bybit_data(symbol:str,interval = None):
     if len(symbol) != 0:
-        current_time = (time.time())
+        
         if interval is not None:
             url = f'https://api.bybit.com/v5/market/kline?category=linear&symbol={symbol}USDT&interval={interval}&start={current_time-(60 * 60 * 24 * 365)}&end={current_time}'
         else:
@@ -54,15 +54,14 @@ def get_bybit_data(symbol:str,interval = None):
         return df
 
 def get_hyperliquid_klines(symbol,interval=None):
-    current_time = (time.time())
     if interval is not None:
         json_data = {
              "type": "candleSnapshot",
             "req": {
                 "coin": symbol,
                 "interval": interval,
-                "startTime": (current_time-(60 * 60 * 24 * 365)),
-                "endTime": current_time,
+                "startTime": int((current_time-(60 * 60 * 24 * 365))*1000),
+                "endTime": int(current_time*1000),
                 }
         }
     else:
@@ -71,14 +70,63 @@ def get_hyperliquid_klines(symbol,interval=None):
              "req": {
                 "coin": symbol,
                 "interval": "1h",
-                "startTime": 1697536508000,
+                "startTime": int((current_time-(60 * 60 * 24 * 365))*1000),
                 "endTime":int(current_time*1000)
                 }
         }
 
     
-    data = httpx.post(hl_url,headers = hl_headers, json=json_data).json()
-    print(data)
+    get_data = httpx.post(hl_url,headers = hl_headers, json=json_data).json()
+    timestamps = [entry['t'] for entry in get_data]
+    open_price = [entry['o'] for entry in get_data]
+    close_price = [entry['c'] for entry in get_data]
+    candle_volume = [entry['v'] for entry in get_data]
+    df = pd.DataFrame({
+         "timestamp":timestamps,
+         "opening_price":open_price,
+         "closing_price":close_price,
+         "candle_volume":candle_volume
+    })
+    return df
+
+
+def get_drift_klines(symbol,exchange,interval = None):
+    
+
+    symbol_map = {
+         "SOL":0,
+         "BTC":1,
+         "ETH":2,
+         "ARB":6,
+         "SUI":9
+         
+    }
+    market_index = symbol_map.get(symbol)
+
+    if interval is None:
+        interval = "60"
+    get_data = httpx.get(f"https://mainnet-beta.api.drift.trade/tv/history?marketIndex={market_index}&marketType=perp&resolution={interval}&from=1684696584000&to={int(current_time*1000)}").json()['candles']
+    
+    if exchange == "Drift":
+          timestamps = [entry['start'] for entry in get_data]
+          open_price = [entry['fillOpen'] for entry in get_data]
+          close_price = [entry['fillClose'] for entry in get_data]
+
+    
+    else:
+        timestamps = [entry['start'] for entry in get_data]
+        open_price = [entry['oracleOpen'] for entry in get_data]
+        close_price = [entry['oracleClose'] for entry in get_data]
+
+    df = pd.DataFrame({
+         "timestamp":timestamps,
+         "opening_price":open_price,
+            "closing_price":close_price
+    })
+    return df
+
+
+     
     
          
          

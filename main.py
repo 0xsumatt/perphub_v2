@@ -20,7 +20,7 @@ def main():
     current_tab = query_params.get('tab', ['Home'])[0]
 
     # Define the available tabs
-    tabs = ["Home", "Solana","Hyperliquid","Tools"]
+    tabs = ["Home", "Solana","Hyperliquid","Tools","Useful Links"]
 
     
     selected_tab = st.sidebar.radio("Navigate to:", tabs, index=tabs.index(current_tab))
@@ -43,7 +43,7 @@ def main():
      case "Home":
         st.write("")
         refresh = st_autorefresh(300000)
-        st.markdown("News refreshes every 5 minutes and uses News of Alpha feed")
+        st.markdown("News refreshes every 5 minutes using the News of Alpha feed")
         st.write(fetch_news())
    
         protocols = ['Drift','Vertex-Protocol','Hyperliquid','Zeta','Mango-Markets-V4']
@@ -165,7 +165,7 @@ def main():
           c2.altair_chart(dau_chart,use_container_width=True)
          
      case "Tools":
-        sub_tabs = ["Beta Calculator","Position Lookups","Backtester","Orderbook Snapshots","Consolidated Orderbook Density"]
+        sub_tabs = ["Beta Calculator","Position Lookups","Historic Trade Visualisations","Backtester","Orderbook Snapshots","Consolidated Orderbook Density"]
         current_sub_tab = query_params.get('sub_tab',['Beta Calculator'])[0]
         selected_sub_tab = st.radio("Choose:", sub_tabs, index=sub_tabs.index(current_sub_tab))
         match selected_sub_tab:
@@ -191,39 +191,58 @@ def main():
                     st.write(f"The beta of {', '.join(ticker_1)} against {ticker_2} is: {beta:.2f}")
 
 
-            case "Historic Trading Lookups":
-                st.warning("currently not working")
+            case "Historic Trade Visualisations":
+               
                 exchange = st.selectbox("Select an Exchange",['Drift',"Hyperliquid","Zeta"])
                 symbol = st.selectbox("Select a symbol:", ["BTC", "ETH", "SOL", "ARB","SUI"]) 
-                chart_interval = st.selectbox("Select an Interval",["Default","1","5","60","120","D","W"])
-                if chart_interval =="Default" :
-                   df_bybit = get_bybit_data(symbol)
-                   
-                else:
-                   df_bybit = get_bybit_data(symbol,chart_interval)
-                df_bybit['timestamp'] = pd.to_datetime(df_bybit['timestamp'], unit='ms')  
+                chart_interval = st.selectbox("Select an Interval",["Default","1m","5m","1h","2h","4h","D","W"])
+                interval_map = {
+                    "1m":1,
+                    "5m":5,
+                    "1h":60,
+                    "4h":240,
+                    "D":"1d",
+                    "W":"1w"
+                    }
+                 
                 address = st.text_input(label ="Enter address", placeholder="0x00")
                 date = st.date_input("Select a Date(Only month is used)and for Drift Only")
+                numeric_interval = interval_map.get(chart_interval)
                 if len(address)>0 :
                     match exchange :
                         
                         case 'Zeta' :
+                            if chart_interval == 'Default':
+                                df_oracle_prcing = get_drift_klines(symbol,exchange="Zeta")
+                            else:
+                                df_oracle_prcing = get_drift_klines(symbol,exchange="Zeta",interval=numeric_interval)
+                            df_oracle_prcing['timestamp'] = pd.to_datetime(df_oracle_prcing['timestamp'], unit='ms') 
                             df_zeta = fetch_zeta_trades(address)
                             df_zeta= df_zeta[df_zeta['symbol'] == symbol]
                             df_zeta['timestamp'] = pd.to_datetime(df_zeta['timestamp'], unit='s') 
-                            chart = create_interactive_chart(df_bybit, exchange_df=df_zeta, width=1000, height=600)
+                            chart = create_interactive_chart(df_oracle_prcing, exchange_df=df_zeta, width=1000, height=600)
                             st.altair_chart(chart)
                         case 'Drift' :
+                            if chart_interval == 'Default':
+                                df_fill_pricing = get_drift_klines(symbol,exchange="Drift")
+                            else:
+                                df_fill_pricing = get_drift_klines(symbol,exchange="Drift",interval=numeric_interval)
+                            df_fill_pricing['timestamp'] = pd.to_datetime(df_fill_pricing['timestamp'], unit='ms') 
                             selected_month = date.month
                             df_drift = asyncio.run(fetch_drift_trades(address,selected_month))
                             df_drift['timestamp'] = pd.to_datetime(df_drift['timestamp'], unit='s')
-                            chart = create_interactive_chart(df_bybit, exchange_df=df_drift, width=1000, height=600)
+                            chart = create_interactive_chart(df_fill_pricing, exchange_df=df_drift, width=1000, height=600)
                             st.altair_chart(chart)
                         case "Hyperliquid":
+                            if chart_interval == 'Default':
+                                df_hl_klines = get_hyperliquid_klines(symbol)
+                            else:
+                                df_hl_klines = get_hyperliquid_klines(symbol,interval=chart_interval)
+                            df_hl_klines['timestamp'] = pd.to_datetime(df_hl_klines['timestamp'], unit='ms') 
                             df_hl = fetch_hl_fills(address)
                             df_hl = df_hl[df_hl['symbol'] == symbol]
                             df_hl['timestamp'] = pd.to_datetime(df_hl['timestamp'], unit='ms')
-                            chart = create_interactive_chart(df_bybit, df_hl, width=1000, height=600)
+                            chart = create_interactive_chart(df_hl_klines, df_hl, width=1000, height=600)
                             st.altair_chart(chart)
                             
                            
@@ -273,7 +292,7 @@ def main():
                         st.write(styled_html, unsafe_allow_html=True)
 
             case "Consolidated Orderbook Density":
-                st.warning("This is still buggy and regualrly only shows bids")
+                st.warning("This is still buggy and regularly only shows bids")
                 symbol_selection = st.selectbox("Select a token",['SOL',"BTC","ETH","ARB","APT","LTC"])
 
                 data = aggregate_orderbooks(symbol=symbol_selection)
@@ -314,6 +333,22 @@ def main():
                 # Displaying the chart in Streamlit
                 st.altair_chart(combined_chart)
                                         
+     case "Useful Links":
+        st.title("Useful Links")
+        
+        st.markdown("""
+        - [Vybe Network](https://www.vybenetwork.com/)
+        - [Defillama](https://defillama.com/)
+        - [Drift streamlit Dash](https://driftv2.streamlit.app/?tab=Welcome)
+        """)
+        st.markdown("""
+                If you want to support the development of this dash and are not a resident of any restricted country, feel free to 
+                use the ref links below. Ref Links are not endorsements ofcourse.
+        - [Binance](http://binance.com/en/register?ref=TreeOfAlpha)
+        - [Bybit](http://partner.bybit.com/b/Tree_Of_Alpha)
+        - [Hyperliquid](https://app.hyperliquid.xyz/join/LIQ)
+        - [Vertex](https://app.vertexprotocol.com?referral=uzpAPriz8z)
+        """)
 
 if __name__ == "__main__":
     main()
