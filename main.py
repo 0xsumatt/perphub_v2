@@ -97,11 +97,11 @@ def main():
             return color_green(val) if val > 0 else color_red(val)
         
         hl_df = get_hl_funding()
-        vertex_df = fetch_vertex_funding()
+        #vertex_df = fetch_vertex_funding()
         mango_df = fetch_mango_funding()
 
         # Concatenate the dataframes vertically
-        combined_df = pd.concat([hl_df, vertex_df, mango_df])
+        combined_df = pd.concat([hl_df, mango_df])
 
         # Reshape the combined dataframe using pivot_table
         final_df = combined_df.pivot_table(index='Token Name', columns='Protocol', values='Funding Rate', aggfunc='first')
