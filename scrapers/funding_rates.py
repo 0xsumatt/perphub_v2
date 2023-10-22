@@ -30,9 +30,9 @@ def get_drift_funding():
    
     
 def get_hl_funding():
-    client = httpx.Client()
+   
     data = {"type": "metaAndAssetCtxs"}
-    req = client.post(url= hl_url, headers=hl_headers, json=data).json()
+    req = httpx.post(url= hl_url, headers=hl_headers, json=data).json()
     # Extract 'ame values dynamically from the first item of the list in the response
     token_names = [item['name'] for item in req[0]['universe']]
     # Extract funding rates for each token in name
@@ -43,27 +43,18 @@ def get_hl_funding():
     }
     rates_df = pd.DataFrame(new_dict).astype({"Token Name": "string", "Funding Rate": "float64", "Open Interest (in token)": "float64"})
     
-    # Set index to 'Token Name' and transpose the DataFrame
-    rates_df = rates_df.set_index('Token Name').T
+    rates_df['Protocol'] = 'Hyperliquid'
     
-    client.close()
     return rates_df
 
-def fetch_historic_funding():
-    client = httpx.Client()
-    data = {"type":"meta"}
-    
-    init_req = client.post(url=hl_url,headers=hl_headers,json=data).json()
-    token_names = [item['name'] for item in init_req['universe']]
-    option = st.selectbox("Select a Coin",token_names)
-
+def fetch_hl_historic_funding(option):
 
     hist_data = {
         "type":"fundingHistory",
         "coin":option,
         "startTime":1684512000000
         }
-    get_hist_rate = client.post(url=hl_url,headers=hl_headers,json= hist_data).json()
+    get_hist_rate = httpx.post(url=hl_url,headers=hl_headers,json= hist_data).json()
 
     df = pd.DataFrame(get_hist_rate)
     df['time'] = pd.to_datetime(df['time'], unit='ms')
@@ -72,5 +63,73 @@ def fetch_historic_funding():
     # Set 'time' as the index
     df.set_index('time', inplace=True)
     df =df.drop('coin',axis=1)
-    client.close()
     return df
+
+def fetch_vertex_funding(symbol = None):
+    product_id_to_symbol = {
+        2: "BTC",
+        4: "ETH",
+        6: "ARB",
+        8:"BNB",
+        10:"XRP",
+        12:"SOL",
+        14:"MATIC",
+        16:"SUI",
+        18:"OP",
+        20:"APT",
+        22:"LTC",
+        24:"BCH",
+        26:"COMP",
+        28:"MKR",
+        30:"PEPE",
+        34:"DOGE",
+        36:"LINK",
+        38:"DYDX",
+        40:"CRV"
+    }
+
+    json_data = {
+            
+            "funding_rates": {
+                "product_ids": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 34, 36, 38, 40]
+            
+            }
+        }
+
+    data = httpx.post("https://prod.vertexprotocol-backend.com/indexer",json=json_data).json()
+
+    converted_data = []
+
+    for key, value in data.items():
+        product_id = value['product_id']
+        symbol = product_id_to_symbol.get(product_id)
+        
+        if symbol:  # Only process if the symbol exists in the map
+            funding_rate = (int(value['funding_rate_x18']) / 10**18) / 24
+            converted_data.append({
+                'Token Name': symbol,
+                'Funding Rate': funding_rate,
+            })
+
+    # Convert the list of dictionaries to a DataFrame
+    df = pd.DataFrame(converted_data)
+    df['Protocol'] = 'Vertex'
+    return df
+
+def fetch_mango_funding():
+    data = httpx.get("https://api.mngo.cloud/data/v4/stats/perp-market-summary").json()
+    extracted_rates = []
+    for symbol, data_list in data.items():
+        if data_list:  # Check if the list is not empty
+            data_dict = data_list[0]  # Assuming there's only one dictionary per list
+            funding_rate = data_dict.get("funding_rate")
+            clean_symbol = symbol.replace("-PERP", "")  # Removing the -PERP suffix
+            extracted_rates.append({
+                'Token Name': clean_symbol,
+                'Funding Rate': funding_rate
+            })
+
+    # Convert the list of dictionaries to a DataFrame
+    df = pd.DataFrame(extracted_rates)
+    df['Protocol'] = 'Mango'
+    return(df)

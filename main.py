@@ -6,6 +6,7 @@ from scripts.beta import beta_calculator
 from scrapers.lookups import *
 from scrapers.orderbooks import *
 from streamlit_autorefresh import st_autorefresh
+from utils.helpers import *
 
 alt.data_transformers.disable_max_rows()
 def main():
@@ -20,7 +21,7 @@ def main():
     current_tab = query_params.get('tab', ['Home'])[0]
 
     # Define the available tabs
-    tabs = ["Home", "Solana","Hyperliquid","Tools","Useful Links"]
+    tabs = ["Home", "Funding Rates","Solana","Hyperliquid","Tools","Useful Links"]
 
     
     selected_tab = st.sidebar.radio("Navigate to:", tabs, index=tabs.index(current_tab))
@@ -89,7 +90,36 @@ def main():
         st.altair_chart(chart,use_container_width=True)
         refresh
 
+     case "Funding Rates":
+        st.write("")
+        st.markdown("Live funding rates from multiple exchanges")
+        def highlight_colors(val):
+            return color_green(val) if val > 0 else color_red(val)
+        
+        hl_df = get_hl_funding()
+        vertex_df = fetch_vertex_funding()
+        mango_df = fetch_mango_funding()
 
+        # Concatenate the dataframes vertically
+        combined_df = pd.concat([hl_df, vertex_df, mango_df])
+
+        # Reshape the combined dataframe using pivot_table
+        final_df = combined_df.pivot_table(index='Token Name', columns='Protocol', values='Funding Rate', aggfunc='first')
+        final_df = final_df.T
+        styled_df = final_df.style.applymap(highlight_colors)
+        st.write(styled_df.to_html(), unsafe_allow_html=True)
+    
+        st.title("Historic Funding Rates")
+        st.markdown("Currently only Hyperliquid is supported")
+        data = {"type":"meta"}
+        init_req = httpx.post(url=hl_url,headers=hl_headers,json=data).json()
+        token_names = [item['name'] for item in init_req['universe']]
+        options = st.selectbox("Select a Coin",token_names)
+        df = fetch_hl_historic_funding(option=options)
+        df_trans = df.T
+        st.write(df_trans)
+    
+        
 
      case "Solana":
         st.write("")
@@ -263,12 +293,6 @@ def main():
                 exchange = st.selectbox("Select and Exchange", ['Hyperliquid','Vertex','Zeta Markets'])
                 selected_symbol = st.selectbox("Choose a ticker",['BTC','ETH','SOL'])
 
-                # Styling functions
-                def color_green(val):
-                    return 'color: green'
-
-                def color_red(val):
-                    return 'color: red'
 
                 def style_dataframe(df):
                     return df.style.\
