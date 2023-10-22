@@ -21,7 +21,7 @@ def main():
     current_tab = query_params.get('tab', ['Home'])[0]
 
     # Define the available tabs
-    tabs = ["Home", "Funding Rates","Solana","Hyperliquid","Tools","Useful Links"]
+    tabs = ["Home","Funding Rates","Solana","Hyperliquid","Tools","Useful Links"]
 
     
     selected_tab = st.sidebar.radio("Navigate to:", tabs, index=tabs.index(current_tab))
