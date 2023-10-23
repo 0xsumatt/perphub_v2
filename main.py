@@ -99,10 +99,10 @@ def main():
         hl_df = get_hl_funding()
         #vertex_df = fetch_vertex_funding()
         mango_df = fetch_mango_funding()
-
+        aevo_df = asyncio.run(fetch_aevo_funding())
         # Concatenate the dataframes vertically
-        combined_df = pd.concat([hl_df, mango_df])
-
+        combined_df = pd.concat([hl_df,aevo_df,mango_df])
+        
         # Reshape the combined dataframe using pivot_table
         final_df = combined_df.pivot_table(index='Token Name', columns='Protocol', values='Funding Rate', aggfunc='first')
         final_df = final_df.T

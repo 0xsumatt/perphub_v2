@@ -3,6 +3,7 @@ import time
 import httpx
 import pandas as pd
 import streamlit as st
+from utils.helpers import *
 
 curr_ts = int(time.time())
 hl_url ="https://api.hyperliquid.xyz/info"
@@ -133,3 +134,34 @@ def fetch_mango_funding():
     df = pd.DataFrame(extracted_rates)
     df['Protocol'] = 'Mango'
     return(df)
+
+async def fetch_single_funding_rate(asset):
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f'https://api.aevo.xyz/funding?instrument_name={asset}-PERP')
+            data = response.json()
+            funding_rate = data['funding_rate']
+
+            return asset,funding_rate
+        except Exception as e:
+            # Optionally, you can log the error here if needed.
+            return None
+
+
+async def fetch_aevo_funding():
+    assets = fetch_aevo_assets()  # Assuming this function is synchronous; if not, await it
+    funding_data = await asyncio.gather(*[fetch_single_funding_rate(asset) for asset in assets])
+    
+    # Filter out None values (assets for which fetching failed)
+    funding_data = [item for item in funding_data if item is not None]
+
+    # Convert the list of tuples into a DataFrame with specified column names
+    df = pd.DataFrame(funding_data, columns=['Token Name', 'Funding Rate'])
+    df['Protocol'] = 'Aevo'
+    df['Funding Rate'] = df['Funding Rate'].astype(float)
+
+
+
+    
+    return df
+
