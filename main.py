@@ -120,6 +120,26 @@ def main():
         st.write(df_trans)
     
         
+     case "Spread Data":
+        st.title("Charts of Spread percentages for tokens over time")
+        st.markdown("""
+                    [Raw data for these can be found here]("https://github.com/0xsumatt/orderbook_snaps")
+                    """)
+        asset = st.selectbox("Select a Token",['BTC','ETH','SOL','ARB'])
+        urls = [f"https://raw.githubusercontent.com/0xsumatt/orderbook_snaps/master/hyperliquid_{asset}_orderbook_snap.csv",f"https://raw.githubusercontent.com/0xsumatt/orderbook_snaps/master/zeta_{asset}_orderbook_snap.csv",f"https://raw.githubusercontent.com/0xsumatt/orderbook_snaps/master/vertex_{asset}_orderbook_snap.csv"]  # List of your URLs
+        results = []
+
+        for url in urls:
+            df = process_data_from_url(url)
+            
+            results.append(df)
+
+        # Concatenate results
+        final_df = pd.concat(results)
+       
+       
+        chart = create_line_chart(final_df, 'timestamp', 'spread_percentage', title="Spread Percentage over Time", color='protocol_name',color_scheme=colour_scheme)
+        st.altair_chart(chart)
 
      case "Solana":
         st.write("")
