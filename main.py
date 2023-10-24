@@ -136,9 +136,13 @@ def main():
 
         # Concatenate results
         final_df = pd.concat(results)
+        spread_scheme = {
+            "Hyperliquid":"#99F7AB",
+            "Vertex":"#EDC79B",
+            "Zeta Markets":"#F75590"
+        }
        
-       
-        chart = create_line_chart(final_df, 'timestamp', 'spread_percentage', title="Spread Percentage over Time", color='protocol_name',color_scheme=colour_scheme)
+        chart = create_line_chart(final_df, 'timestamp', 'spread_percentage', title="Spread Percentage over Time", color='protocol_name',color_scheme=spread_scheme)
         st.altair_chart(chart)
 
      case "Solana":
