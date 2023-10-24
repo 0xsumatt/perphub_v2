@@ -143,7 +143,7 @@ def main():
         }
        
         chart = create_line_chart(final_df, 'timestamp', 'spread_percentage', title="Spread Percentage over Time", color='protocol_name',color_scheme=spread_scheme)
-        st.altair_chart(chart)
+        st.altair_chart(chart,use_container_width=True)
 
      case "Solana":
         st.write("")
