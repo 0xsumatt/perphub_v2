@@ -388,6 +388,7 @@ def main():
         - [Vybe Network](https://www.vybenetwork.com/)
         - [Defillama](https://defillama.com/)
         - [Drift streamlit Dash](https://driftv2.streamlit.app/?tab=Welcome)
+        - [Dirty Diggler's Dune Dash] (https://dune.com/dirt_diggler/the-great-solana-dashboard)
         """)
         st.markdown("""
                 If you want to support the development of this dash and are not a resident of any restricted country, feel free to 
